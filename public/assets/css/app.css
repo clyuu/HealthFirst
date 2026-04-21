@@ -45,40 +45,145 @@ a {
 }
 
 .site-header {
+    background: rgba(255, 255, 255, 0.95);
+    border-bottom: 1px solid rgba(47, 69, 135, 0.1);
+    box-shadow: 0 8px 28px rgba(22, 34, 73, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    backdrop-filter: blur(16px);
+}
+
+.site-header-inner {
     width: min(1240px, calc(100% - 2rem));
     margin: 0 auto;
-    padding: 1rem 0;
+    padding: 0.85rem 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    color: white;
 }
 
 .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
     font-size: 1.5rem;
     font-weight: 800;
     letter-spacing: 0.02em;
+    color: #1f71e7;
+}
+
+.brand-mark {
+    width: 1.75rem;
+    height: 1.75rem;
+    color: #1f71e7;
+}
+
+.brand-mark svg,
+.nav-icon svg,
+.button-icon svg,
+.patient-inline-icon svg,
+.patient-stat-icon svg,
+.landing-hero-mark svg,
+.landing-feature-icon svg,
+.landing-steps-mark svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .site-nav {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
     flex-wrap: wrap;
 }
 
 .site-nav a,
-.link-button {
-    color: white;
+.link-button,
+.nav-link {
+    color: #5d6475;
     font-weight: 600;
 }
 
 .nav-pill {
     padding: 0.45rem 0.8rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.14);
+    background: rgba(31, 113, 231, 0.1);
+    color: #1f71e7;
     font-size: 0.9rem;
+}
+
+.nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 999px;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    background: rgba(31, 113, 231, 0.1);
+    color: #1f71e7;
+}
+
+.nav-link.logout-link,
+.link-button.logout-link {
+    color: #ef5b5b;
+}
+
+.nav-icon {
+    width: 1rem;
+    height: 1rem;
+    color: currentColor;
+}
+
+.brand-mark,
+.nav-icon,
+.button-icon,
+.patient-inline-icon,
+.patient-stat-icon,
+.landing-hero-mark,
+.landing-feature-icon,
+.landing-steps-mark {
+    line-height: 0;
+    flex: 0 0 auto;
+}
+
+.lang-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding-left: 0.75rem;
+    margin-left: 0.35rem;
+    border-left: 1px solid rgba(93, 100, 117, 0.2);
+}
+
+.lang-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.35rem;
+    height: 2rem;
+    padding: 0 0.65rem;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: #5d6475;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.lang-badge.active {
+    background: #4ca6ff;
+    color: white;
 }
 
 .inline-form {
@@ -216,6 +321,11 @@ a {
 .button.ghost { background: white; color: var(--primary-dark); border: 1px solid rgba(31, 146, 255, 0.35); }
 .button.tiny { padding: 0.55rem 0.9rem; font-size: 0.85rem; }
 .button.large { width: 100%; max-width: 320px; padding: 1rem 1.5rem; }
+
+.button-icon {
+    width: 1rem;
+    height: 1rem;
+}
 
 .hero-panel,
 .stack {
@@ -473,6 +583,799 @@ code {
     background: rgba(57, 65, 94, 0.08);
 }
 
+.patient-dashboard,
+.patient-management-stack {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.patient-hero-card,
+.patient-stat-card,
+.patient-profile-card,
+.patient-sidebar-card,
+.patient-hospital-panel,
+.patient-manage-panel {
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(44, 69, 130, 0.12);
+    box-shadow: 0 18px 35px rgba(29, 39, 79, 0.12);
+}
+
+.patient-hero-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.2rem 1.35rem;
+    border-radius: 24px;
+}
+
+.patient-hero-card h1 {
+    margin: 0 0 0.4rem;
+    font-size: clamp(1.8rem, 3vw, 2.3rem);
+}
+
+.patient-date-line {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0;
+    color: #697086;
+    font-weight: 500;
+}
+
+.patient-hero-qr {
+    background: linear-gradient(135deg, #ff6b57, #f05a24);
+    color: white;
+    min-width: 8.75rem;
+}
+
+.patient-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.patient-stat-card {
+    padding: 1.25rem;
+    border-radius: 22px;
+    text-align: center;
+}
+
+.patient-stat-icon,
+.patient-inline-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.patient-stat-icon {
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 16px;
+    margin-bottom: 0.8rem;
+}
+
+.patient-inline-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    color: #6a7388;
+}
+
+.patient-inline-icon.accent { color: #e85d68; }
+.patient-inline-icon.amber { color: #f5b400; }
+.patient-inline-icon.coral { color: #f05a24; }
+.patient-inline-icon.sky { color: #39a7ff; }
+.patient-inline-icon.cyan { color: #21b8de; }
+.patient-inline-icon.teal { color: #159464; }
+
+.patient-stat-icon.blue { color: #1f71e7; background: rgba(31, 113, 231, 0.12); }
+.patient-stat-icon.green { color: #1d9b5d; background: rgba(29, 155, 93, 0.12); }
+.patient-stat-icon.cyan { color: #20b8df; background: rgba(32, 184, 223, 0.12); }
+.patient-stat-icon.teal { color: #159464; background: rgba(21, 148, 100, 0.12); }
+
+.patient-stat-card h3 {
+    margin: 0;
+    font-size: 1.12rem;
+    color: #374055;
+}
+
+.patient-stat-value {
+    margin: 0.6rem 0 0;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #2e3444;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.98rem;
+    font-weight: 800;
+}
+
+.status-badge.is-complete {
+    background: #1b9a5c;
+    color: white;
+}
+
+.status-badge.is-pending {
+    background: #f2b643;
+    color: white;
+}
+
+.patient-primary-grid {
+    display: grid;
+    grid-template-columns: 1.9fr 0.95fr;
+    gap: 1.2rem;
+}
+
+.patient-profile-card,
+.patient-sidebar-card,
+.patient-hospital-panel,
+.patient-manage-panel {
+    border-radius: 24px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.patient-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 1.15rem;
+    border-bottom: 1px solid rgba(53, 67, 105, 0.12);
+    background: rgba(244, 247, 254, 0.88);
+}
+
+.patient-panel-head h2,
+.patient-panel-head h3 {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0;
+}
+
+.patient-profile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+    padding: 1rem;
+}
+
+.patient-info-tile {
+    display: grid;
+    gap: 0.5rem;
+    min-height: 4.8rem;
+    padding: 1rem 1.05rem;
+    border-left: 4px solid #35c16b;
+    border-radius: 14px;
+    background: rgba(219, 235, 229, 0.72);
+}
+
+.patient-info-tile.tall {
+    min-height: 6.1rem;
+    align-content: start;
+}
+
+.blood-pill {
+    display: inline-flex;
+    width: fit-content;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    background: #ef5b67;
+    color: white;
+    font-weight: 800;
+}
+
+.patient-documents-summary {
+    padding: 0 1rem 1rem;
+}
+
+.patient-subhead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.patient-subhead h3,
+.patient-emergency-box h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #3a4255;
+}
+
+.patient-doc-preview-list,
+.patient-hospital-list,
+.patient-contact-list {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.patient-doc-preview-card,
+.patient-contact-row,
+.patient-empty-card,
+.hospital-mini-card {
+    border: 1px solid rgba(53, 67, 105, 0.1);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 12px 28px rgba(22, 35, 73, 0.08);
+}
+
+.patient-doc-preview-card {
+    padding: 1rem;
+}
+
+.patient-doc-preview-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.55rem;
+}
+
+.patient-sidebar-card {
+    padding-bottom: 1rem;
+}
+
+.patient-quick-actions {
+    display: grid;
+    gap: 0.8rem;
+    padding: 1rem;
+}
+
+.patient-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    min-height: 3rem;
+    border: none;
+    border-radius: 999px;
+    padding: 0.85rem 1rem;
+    color: white;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.patient-action-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.02);
+}
+
+.patient-action-btn.coral { background: linear-gradient(135deg, #ff695d, #f05a24); }
+.patient-action-btn.sky { background: linear-gradient(135deg, #45a5ff, #18d2e8); }
+.patient-action-btn.cyan { background: linear-gradient(135deg, #1fb2e3, #20bfe2); }
+.patient-action-btn.green { background: linear-gradient(135deg, #198e5d, #229764); }
+
+.patient-emergency-box {
+    margin: 0 1rem;
+    padding: 1.15rem 0 0;
+    border-top: 1px solid rgba(53, 67, 105, 0.12);
+    text-align: center;
+}
+
+.patient-emergency-callout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    margin: 0.9rem 0 0.85rem;
+    min-height: 3rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid rgba(239, 91, 91, 0.55);
+    border-radius: 12px;
+    color: #eb5e60;
+    font-weight: 600;
+}
+
+.patient-contact-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.95rem 1rem;
+}
+
+.patient-manage-panel form,
+.patient-manage-panel .card-list,
+.patient-manage-panel .patient-contact-list,
+.patient-hospital-panel .map-box,
+.patient-hospital-panel .notice-area,
+.patient-hospital-panel .patient-hospital-list {
+    margin: 1rem;
+}
+
+.patient-contact-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.patient-contact-form label:last-of-type,
+.patient-contact-form button {
+    grid-column: span 2;
+}
+
+.patient-qr-panel {
+    display: grid;
+    place-items: center;
+    padding: 1.25rem;
+}
+
+.patient-hospital-panel .map-box {
+    min-height: 320px;
+}
+
+.hospital-mini-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+}
+
+.hospital-mini-card strong {
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+.landing-page {
+    display: grid;
+    gap: 2rem;
+    padding: 1.2rem 0 2.4rem;
+}
+
+.landing-hero {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    gap: 1rem;
+    padding: 2.2rem 1rem 0.2rem;
+}
+
+.landing-hero-mark,
+.landing-feature-icon,
+.landing-steps-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.landing-hero-mark {
+    width: 4.4rem;
+    height: 4.4rem;
+    color: #e63946;
+}
+
+.landing-hero h1 {
+    margin: 0;
+    color: white;
+    font-size: clamp(3rem, 5vw, 4.3rem);
+    line-height: 1.05;
+    font-weight: 800;
+}
+
+.landing-hero p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.05rem;
+}
+
+.landing-hero-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.45rem;
+}
+
+.landing-primary-btn {
+    background: linear-gradient(135deg, #42a9ff, #18d4e8);
+    color: white;
+    min-width: 13rem;
+}
+
+.landing-ghost-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    color: white;
+    min-width: 8rem;
+}
+
+.landing-feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.4rem;
+}
+
+.landing-feature-card,
+.landing-steps-card,
+.landing-emergency-card {
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 20px;
+    box-shadow: 0 18px 38px rgba(25, 34, 75, 0.12);
+}
+
+.landing-feature-card {
+    padding: 1.55rem 1.35rem;
+    text-align: center;
+}
+
+.landing-feature-icon {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1rem;
+}
+
+.landing-feature-icon.blue { color: #1f71e7; }
+.landing-feature-icon.green { color: #18945f; }
+.landing-feature-icon.red { color: #e63946; }
+
+.landing-feature-card h2,
+.landing-step h3,
+.landing-emergency-grid h3 {
+    margin: 0 0 0.65rem;
+    color: #2d3340;
+}
+
+.landing-feature-card p,
+.landing-step p {
+    margin: 0;
+    color: #4a5060;
+    line-height: 1.55;
+}
+
+.landing-steps-card {
+    width: min(100%, 1075px);
+    margin: 0 auto;
+    padding: 1rem 1.4rem 1.7rem;
+}
+
+.landing-steps-title,
+.landing-emergency-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1.2rem;
+}
+
+.landing-steps-title h2,
+.landing-emergency-title h2 {
+    margin: 0;
+    font-size: clamp(2rem, 3vw, 2.35rem);
+    color: #2d3340;
+}
+
+.landing-steps-mark {
+    width: 2rem;
+    height: 2rem;
+    color: #1f71e7;
+}
+
+.landing-steps-mark.warning {
+    color: white;
+}
+
+.landing-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.4rem;
+}
+
+.landing-step {
+    text-align: center;
+    padding: 0.5rem 0.35rem;
+}
+
+.landing-step-number {
+    display: grid;
+    place-items: center;
+    width: 3.8rem;
+    height: 3.8rem;
+    margin: 0 auto 1rem;
+    border-radius: 999px;
+    color: white;
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+.landing-step-number.blue { background: #1f71e7; }
+.landing-step-number.green { background: #18945f; }
+.landing-step-number.yellow { background: #f5b400; }
+.landing-step-number.red { background: #e63946; }
+
+.landing-emergency-card {
+    width: min(100%, 860px);
+    margin: 0 auto;
+    padding: 1.2rem 1.4rem;
+    background: linear-gradient(135deg, #ff6a69, #ffa00f);
+    color: white;
+}
+
+.landing-emergency-title {
+    margin-bottom: 0.9rem;
+}
+
+.landing-emergency-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    text-align: center;
+}
+
+.landing-emergency-grid h3,
+.landing-emergency-grid p,
+.landing-footer p {
+    color: white;
+}
+
+.landing-emergency-grid p {
+    margin: 0;
+    font-size: 1.85rem;
+    font-weight: 800;
+}
+
+.landing-footer {
+    text-align: center;
+    color: white;
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.85rem 1rem 0;
+}
+
+.landing-footer p {
+    margin: 0;
+    opacity: 0.96;
+}
+
+.ops-dashboard {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.ops-hero,
+.ops-panel,
+.ops-metric-card,
+.ops-mini-card {
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(44, 69, 130, 0.12);
+    border-radius: 24px;
+    box-shadow: 0 18px 35px rgba(29, 39, 79, 0.12);
+}
+
+.ops-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.35rem;
+}
+
+.ops-hero h1 {
+    margin: 0 0 0.35rem;
+    font-size: clamp(1.85rem, 3vw, 2.4rem);
+}
+
+.ops-hero p,
+.ops-panel-subtext {
+    margin: 0;
+    color: #66708a;
+}
+
+.ops-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.45rem;
+    color: #1f71e7;
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.ops-actions,
+.ops-inline-actions,
+.ops-inline-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.ops-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.ops-metric-card {
+    padding: 1.2rem 1.15rem;
+}
+
+.ops-metric-label {
+    margin: 0 0 0.35rem;
+    color: #5f6980;
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.ops-metric-value {
+    margin: 0;
+    color: #283144;
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.ops-metric-note {
+    margin-top: 0.35rem;
+    color: #79829a;
+    font-size: 0.92rem;
+}
+
+.ops-panel {
+    padding: 0;
+    overflow: hidden;
+}
+
+.ops-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 1.15rem;
+    border-bottom: 1px solid rgba(53, 67, 105, 0.12);
+    background: rgba(244, 247, 254, 0.88);
+}
+
+.ops-panel-head h2,
+.ops-panel-head h3 {
+    margin: 0;
+    color: #2f374b;
+}
+
+.ops-panel-body {
+    padding: 1rem;
+}
+
+.ops-split {
+    display: grid;
+    grid-template-columns: 1.45fr 1fr;
+    gap: 1.2rem;
+}
+
+.ops-three-col {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.2rem;
+}
+
+.ops-stack {
+    display: grid;
+    gap: 1rem;
+}
+
+.ops-list,
+.ops-feed-grid {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.ops-mini-card {
+    padding: 1rem 1.05rem;
+}
+
+.ops-mini-card strong {
+    display: block;
+    color: #263043;
+    margin-bottom: 0.2rem;
+}
+
+.ops-mini-card span,
+.ops-mini-card p {
+    color: #66708a;
+}
+
+.ops-kicker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(31, 113, 231, 0.1);
+    color: #1f71e7;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.ops-kicker.success {
+    background: rgba(24, 148, 95, 0.12);
+    color: #18945f;
+}
+
+.ops-kicker.warning {
+    background: rgba(245, 180, 0, 0.14);
+    color: #b68000;
+}
+
+.ops-kicker.danger {
+    background: rgba(230, 57, 70, 0.12);
+    color: #d93a47;
+}
+
+.ops-empty {
+    padding: 1rem;
+    border-radius: 18px;
+    background: rgba(246, 248, 253, 0.92);
+    color: #697187;
+    text-align: center;
+}
+
+.ops-incident-card {
+    background: rgba(255, 255, 255, 0.98);
+}
+
+.ops-incident-card .tile-head h3 {
+    margin: 0;
+}
+
+.ops-incident-meta {
+    display: grid;
+    gap: 0.45rem;
+    color: #475069;
+}
+
+.ops-incident-meta p {
+    margin: 0;
+}
+
+.ops-form-card {
+    padding: 1rem;
+    border: 1px solid rgba(53, 67, 105, 0.1);
+    border-radius: 18px;
+    background: rgba(248, 250, 255, 0.94);
+}
+
+.ops-form-card h3 {
+    margin-top: 0;
+    margin-bottom: 0.85rem;
+    color: #2f374b;
+}
+
+.ops-form-card + .ops-form-card {
+    margin-top: 0.9rem;
+}
+
+.ops-note {
+    padding: 0.85rem 1rem;
+    border-radius: 16px;
+    background: rgba(31, 113, 231, 0.08);
+    color: #1f71e7;
+}
+
+.ops-map-wrap {
+    padding: 1rem;
+}
+
+.ops-map-wrap .map-box {
+    margin-bottom: 0.85rem;
+}
+
+.ops-grid-span-2 {
+    grid-column: span 2;
+}
+
 @media (max-width: 980px) {
     .hero,
     .two-col,
@@ -483,9 +1386,74 @@ code {
     }
 
     .dashboard-header,
-    .site-header {
+    .site-header-inner,
+    .patient-hero-card,
+    .patient-panel-head,
+    .patient-contact-row,
+    .patient-doc-preview-top,
+    .patient-subhead {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .patient-stats-grid,
+    .patient-primary-grid,
+    .patient-profile-grid,
+    .patient-contact-form,
+    .landing-feature-grid,
+    .landing-steps-grid,
+    .landing-emergency-grid,
+    .ops-metrics-grid,
+    .ops-split,
+    .ops-three-col {
+        grid-template-columns: 1fr;
+    }
+
+    .lang-switch {
+        padding-left: 0;
+        margin-left: 0;
+        border-left: none;
+    }
+
+    .ops-hero,
+    .ops-panel-head {
         flex-direction: column;
         align-items: flex-start;
     }
 }
 
+@media (max-width: 640px) {
+    .page-container {
+        width: min(100% - 1rem, 100%);
+        padding-top: 1rem;
+    }
+
+    .site-header-inner {
+        width: min(100% - 1rem, 100%);
+    }
+
+    .patient-action-btn,
+    .patient-hero-qr,
+    .button.large,
+    .button.wide,
+    .wide {
+        width: 100%;
+    }
+
+    .landing-hero h1 {
+        font-size: 2.45rem;
+    }
+
+    .patient-quick-actions,
+    .patient-profile-grid,
+    .patient-documents-summary,
+    .patient-hospital-panel .map-box,
+    .patient-hospital-panel .notice-area,
+    .patient-hospital-panel .patient-hospital-list,
+    .patient-manage-panel form,
+    .patient-manage-panel .card-list,
+    .patient-manage-panel .patient-contact-list {
+        margin-left: 0.85rem;
+        margin-right: 0.85rem;
+    }
+}
