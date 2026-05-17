@@ -26,6 +26,8 @@ $bloodGroup = (string) ($profile['blood_group'] ?? 'Unknown');
 $allergies = trim((string) ($profile['allergies'] ?? ''));
 $chronicConditions = trim((string) ($profile['chronic_conditions'] ?? ''));
 $notes = trim((string) ($profile['notes'] ?? ''));
+$bloodGroups = ['Unknown', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+$phonePattern = '0[0-9]{9}';
 $icon = static function (string $name): string {
     $icons = [
         'calendar' => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg>',
@@ -43,6 +45,13 @@ $icon = static function (string $name): string {
 
     return $icons[$name] ?? '';
 };
+$documentSourceLabel = static function (array $document): string {
+    if (($document['source_type'] ?? '') === 'hospital_upload') {
+        return 'Hospital document' . (!empty($document['hospital_name']) ? ' - ' . $document['hospital_name'] : '');
+    }
+
+    return 'Patient upload';
+};
 ?>
 <section class="patient-dashboard">
     <div class="patient-hero-card">
@@ -53,10 +62,10 @@ $icon = static function (string $name): string {
                 <span>Today: <?= e($todayLabel) ?><?= $age !== null ? ' | Age: ' . e((string) $age) : '' ?></span>
             </p>
         </div>
-        <a class="button patient-hero-qr" href="#patient-qr-section" data-open-panel="patient-qr-section">
+        <button class="button patient-hero-qr" type="button" data-modal-open="patientQrModal">
             <span class="button-icon"><?= $icon('qr') ?></span>
             <span>QR Code</span>
-        </a>
+        </button>
     </div>
 
     <section class="patient-stats-grid">
@@ -86,7 +95,7 @@ $icon = static function (string $name): string {
         <article class="panel patient-profile-card" id="profile-summary">
             <div class="patient-panel-head">
                 <h2><span class="patient-inline-icon accent"><?= $icon('profile') ?></span>Medical Profile</h2>
-                <button class="button tiny primary" type="button" data-open-panel="profile-manage-section">
+                <button class="button tiny primary" type="button" data-modal-open="editProfileModal">
                     <span class="button-icon"><?= $icon('edit') ?></span>
                     <span>Edit</span>
                 </button>
@@ -113,8 +122,8 @@ $icon = static function (string $name): string {
 
             <div class="patient-documents-summary">
                 <div class="patient-subhead">
-                    <h3>Uploaded Medical Documents</h3>
-                    <button class="button tiny ghost" type="button" data-open-panel="document-manage-section">Manage</button>
+                    <h3>Medical Documents</h3>
+                    <button class="button tiny ghost" type="button" data-modal-open="medicalDocumentsModal">Manage</button>
                 </div>
                 <?php if ($documentPreview !== []): ?>
                     <div class="patient-doc-preview-list">
@@ -124,6 +133,7 @@ $icon = static function (string $name): string {
                                     <span class="doc-chip"><?= e($document['title']) ?></span>
                                     <span class="muted"><?= e(substr((string) $document['uploaded_at'], 0, 10)) ?></span>
                                 </div>
+                                <p class="muted"><?= e($documentSourceLabel($document)) ?></p>
                                 <p class="muted"><?= e($document['description'] ?: 'No description provided.') ?></p>
                                 <div class="actions-row">
                                     <a class="button tiny ghost" href="<?= e(url('/documents/' . $document['document_id'] . '/download?inline=1')) ?>" target="_blank">
@@ -149,22 +159,22 @@ $icon = static function (string $name): string {
                 <h2><span class="patient-inline-icon amber"><?= $icon('condition') ?></span>Quick Actions</h2>
             </div>
             <div class="patient-quick-actions">
-                <a class="patient-action-btn coral" href="#patient-qr-section" data-open-panel="patient-qr-section">
+                <button class="patient-action-btn coral" type="button" data-modal-open="patientQrModal">
                     <span class="button-icon"><?= $icon('qr') ?></span>
                     <span>QR Code</span>
-                </a>
-                <button class="patient-action-btn sky" type="button" data-open-panel="profile-manage-section">
+                </button>
+                <button class="patient-action-btn sky" type="button" data-modal-open="editProfileModal">
                     <span class="button-icon"><?= $icon('edit') ?></span>
                     <span>Edit Profile</span>
                 </button>
-                <button class="patient-action-btn cyan" type="button" data-open-panel="document-manage-section">
+                <button class="patient-action-btn cyan" type="button" data-modal-open="medicalDocumentsModal">
                     <span class="button-icon"><?= $icon('upload') ?></span>
                     <span>Upload Documents</span>
                 </button>
-                <a class="patient-action-btn green" href="#patient-hospitals-section">
+                <button class="patient-action-btn green" type="button" data-modal-open="nearbyHospitalsModal">
                     <span class="button-icon"><?= $icon('hospital') ?></span>
                     <span>Nearby Hospitals</span>
-                </a>
+                </button>
             </div>
 
             <div class="patient-emergency-box">
@@ -173,78 +183,119 @@ $icon = static function (string $name): string {
                     <span class="patient-inline-icon coral"><?= $icon('phone') ?></span>
                     <span><?= e($contactLabel) ?></span>
                 </div>
-                <button class="button tiny ghost wide" type="button" data-open-panel="contact-manage-section">Manage Emergency Numbers</button>
+                <button class="button tiny ghost wide" type="button" data-modal-open="contactManageModal">Manage Emergency Numbers</button>
             </div>
         </aside>
     </section>
+</section>
 
-    <section class="patient-management-stack">
-        <article class="panel patient-manage-panel hidden" id="patient-qr-section">
-            <div class="patient-panel-head">
-                <h2><span class="patient-inline-icon coral"><?= $icon('qr') ?></span>My QR Code</h2>
-                <div class="actions-row">
-                    <a class="button tiny primary" href="<?= e(url('/patient/qr/download')) ?>">
-                        <span class="button-icon"><?= $icon('download') ?></span>
-                        <span>Download QR</span>
-                    </a>
-                    <a class="button tiny ghost" href="<?= e(url('/patient/qr/print')) ?>" target="_blank">Print Sticker</a>
+<div class="app-modal" id="patientQrModal" hidden>
+    <div class="app-modal-backdrop" data-modal-close></div>
+    <section class="app-modal-panel" role="dialog" aria-modal="true" aria-labelledby="patientQrTitle">
+        <div class="app-modal-head">
+            <div>
+                <h2 id="patientQrTitle"><span class="patient-inline-icon coral"><?= $icon('qr') ?></span>My QR Code</h2>
+                <p class="ops-panel-subtext">Use this QR for emergency profile access.</p>
+            </div>
+            <button class="modal-close" type="button" data-modal-close aria-label="Close">x</button>
+        </div>
+        <div class="patient-qr-panel app-modal-body">
+            <img class="qr-preview" src="<?= e(url('/patient/qr/download')) ?>" alt="Patient QR code">
+            <div class="actions-row">
+                <a class="button tiny primary" href="<?= e(url('/patient/qr/download')) ?>">
+                    <span class="button-icon"><?= $icon('download') ?></span>
+                    <span>Download QR</span>
+                </a>
+                <a class="button tiny ghost" href="<?= e(url('/patient/qr/print')) ?>" target="_blank">Print Sticker</a>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div class="app-modal app-modal-wide" id="editProfileModal" hidden>
+    <div class="app-modal-backdrop" data-modal-close></div>
+    <section class="app-modal-panel" role="dialog" aria-modal="true" aria-labelledby="editProfileTitle">
+        <div class="app-modal-head">
+            <div>
+                <h2 id="editProfileTitle"><span class="patient-inline-icon sky"><?= $icon('edit') ?></span>Edit Medical Profile</h2>
+                <p class="ops-panel-subtext">NIC is shown for reference and cannot be changed.</p>
+            </div>
+            <button class="modal-close" type="button" data-modal-close aria-label="Close">x</button>
+        </div>
+        <form method="post" action="<?= e(url('/patient/profile')) ?>" class="grid-form compact app-modal-body">
+            <?= csrf_field() ?>
+            <label>Full name
+                <input type="text" name="full_name" value="<?= e($user['full_name']) ?>" required>
+            </label>
+            <label>NIC number
+                <input type="text" value="<?= e($user['nic_number'] ?? '') ?>" readonly>
+            </label>
+            <label>Phone
+                <input type="tel" name="phone" value="<?= e($user['phone']) ?>" pattern="<?= e($phonePattern) ?>" maxlength="10" inputmode="numeric" data-validate="phone" title="Use exactly 10 digits, such as 0771234567." required>
+            </label>
+            <label>Date of birth
+                <input type="date" name="date_of_birth" value="<?= e($user['date_of_birth']) ?>">
+            </label>
+            <label>Blood group
+                <select name="blood_group" required>
+                    <?php foreach ($bloodGroups as $group): ?>
+                        <option value="<?= e($group) ?>" <?= ($profile['blood_group'] ?? 'Unknown') === $group ? 'selected' : '' ?>><?= e($group) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>Emergency phone
+                <input type="tel" name="emergency_phone" value="<?= e($profile['emergency_phone'] ?? '') ?>" pattern="<?= e($phonePattern) ?>" maxlength="10" inputmode="numeric" data-validate="phone-optional" title="Use exactly 10 digits, such as 0771234567.">
+            </label>
+            <label class="span-2">Address
+                <textarea name="address" rows="2" required><?= e($user['address']) ?></textarea>
+            </label>
+            <label class="span-2">Allergies
+                <textarea name="allergies" rows="2"><?= e($profile['allergies'] ?? '') ?></textarea>
+            </label>
+            <label class="span-2">Chronic conditions
+                <textarea name="chronic_conditions" rows="2"><?= e($profile['chronic_conditions'] ?? '') ?></textarea>
+            </label>
+            <label class="span-2">Notes
+                <textarea name="notes" rows="3"><?= e($profile['notes'] ?? '') ?></textarea>
+            </label>
+            <div class="span-2 location-picker" data-location-picker data-api-key="<?= e($mapsApiKey) ?>" data-default-lat="6.9271" data-default-lng="79.8612">
+                <input type="hidden" name="profile_latitude" value="<?= e((string) ($user['profile_latitude'] ?? '')) ?>" data-location-lat>
+                <input type="hidden" name="profile_longitude" value="<?= e((string) ($user['profile_longitude'] ?? '')) ?>" data-location-lng>
+                <div class="location-picker-head">
+                    <div>
+                        <h3>Home Location</h3>
+                        <p class="muted">Search with Google Maps or use current location to change your home location.</p>
+                    </div>
+                    <button class="button tiny ghost" type="button" data-location-current>Use current location</button>
                 </div>
-            </div>
-            <div class="patient-qr-panel">
-                <img class="qr-preview" src="<?= e(url('/patient/qr/download')) ?>" alt="Patient QR code">
-                <p class="muted">This QR code opens your secure emergency profile page for first responders.</p>
-            </div>
-        </article>
-
-        <article class="panel patient-manage-panel hidden" id="profile-manage-section">
-            <div class="patient-panel-head">
-                <h2><span class="patient-inline-icon sky"><?= $icon('edit') ?></span>Edit Medical Profile</h2>
-            </div>
-            <form method="post" action="<?= e(url('/patient/profile')) ?>" class="grid-form compact">
-                <?= csrf_field() ?>
-                <label>Full name
-                    <input type="text" name="full_name" value="<?= e($user['full_name']) ?>" required>
-                </label>
-                <label>Phone
-                    <input type="text" name="phone" value="<?= e($user['phone']) ?>" required>
-                </label>
-                <label class="span-2">Address
-                    <textarea name="address" rows="2" required><?= e($user['address']) ?></textarea>
-                </label>
-                <label>Date of birth
-                    <input type="date" name="date_of_birth" value="<?= e($user['date_of_birth']) ?>">
-                </label>
-                <label>Blood group
-                    <input type="text" name="blood_group" value="<?= e($profile['blood_group'] ?? '') ?>">
-                </label>
-                <label>Emergency phone
-                    <input type="text" name="emergency_phone" value="<?= e($profile['emergency_phone'] ?? '') ?>">
-                </label>
-                <label>Profile latitude
-                    <input type="text" name="profile_latitude" value="<?= e($user['profile_latitude'] ?? '') ?>">
-                </label>
-                <label>Profile longitude
-                    <input type="text" name="profile_longitude" value="<?= e($user['profile_longitude'] ?? '') ?>">
-                </label>
-                <label class="span-2">Allergies
-                    <textarea name="allergies" rows="2"><?= e($profile['allergies'] ?? '') ?></textarea>
-                </label>
-                <label class="span-2">Chronic conditions
-                    <textarea name="chronic_conditions" rows="2"><?= e($profile['chronic_conditions'] ?? '') ?></textarea>
-                </label>
-                <label class="span-2">Notes
-                    <textarea name="notes" rows="3"><?= e($profile['notes'] ?? '') ?></textarea>
-                </label>
-                <div class="span-2">
-                    <button class="button primary" type="submit">Save Profile</button>
+                <div class="location-search-row">
+                    <input type="search" class="location-search" placeholder="Search home location" data-location-search>
+                    <button class="button tiny primary" type="button" data-location-search-button>Search</button>
+                    <button class="button tiny ghost location-drop-toggle" type="button" data-location-drop-toggle aria-pressed="false">Drop pin</button>
                 </div>
-            </form>
-        </article>
-
-        <article class="panel patient-manage-panel hidden" id="contact-manage-section">
-            <div class="patient-panel-head">
-                <h2><span class="patient-inline-icon coral"><?= $icon('phone') ?></span>Manage Emergency Numbers</h2>
+                <div class="location-map" data-location-map data-location-preview></div>
+                <div class="notice-area" data-location-notice hidden></div>
+                <p class="location-selected" data-location-selected>No home location selected yet.</p>
             </div>
+            <div class="span-2 actions-row">
+                <button class="button primary" type="submit">Save Profile</button>
+                <button class="button ghost" type="button" data-modal-close>Cancel</button>
+            </div>
+        </form>
+    </section>
+</div>
+
+<div class="app-modal" id="contactManageModal" hidden>
+    <div class="app-modal-backdrop" data-modal-close></div>
+    <section class="app-modal-panel" role="dialog" aria-modal="true" aria-labelledby="contactManageTitle">
+        <div class="app-modal-head">
+            <div>
+                <h2 id="contactManageTitle"><span class="patient-inline-icon coral"><?= $icon('phone') ?></span>Manage Emergency Numbers</h2>
+                <p class="ops-panel-subtext">Add a trusted number for emergency contact.</p>
+            </div>
+            <button class="modal-close" type="button" data-modal-close aria-label="Close">x</button>
+        </div>
+        <div class="app-modal-body">
             <form method="post" action="<?= e(url('/patient/contacts')) ?>" class="stack-form patient-contact-form">
                 <?= csrf_field() ?>
                 <label>Name
@@ -254,7 +305,7 @@ $icon = static function (string $name): string {
                     <input type="text" name="relationship">
                 </label>
                 <label>Phone number
-                    <input type="text" name="phone_number" required>
+                    <input type="tel" name="phone_number" pattern="<?= e($phonePattern) ?>" maxlength="10" inputmode="numeric" data-validate="phone" title="Use exactly 10 digits, such as 0771234567." required>
                 </label>
                 <label class="inline-check">
                     <input type="checkbox" name="is_primary" value="1">
@@ -273,12 +324,21 @@ $icon = static function (string $name): string {
                     <div class="patient-empty-card">No emergency contacts added yet.</div>
                 <?php endif; ?>
             </div>
-        </article>
+        </div>
+    </section>
+</div>
 
-        <article class="panel patient-manage-panel hidden" id="document-manage-section">
-            <div class="patient-panel-head">
-                <h2><span class="patient-inline-icon cyan"><?= $icon('document') ?></span>Medical Documents</h2>
+<div class="app-modal app-modal-wide" id="medicalDocumentsModal" hidden>
+    <div class="app-modal-backdrop" data-modal-close></div>
+    <section class="app-modal-panel" role="dialog" aria-modal="true" aria-labelledby="medicalDocumentsTitle">
+        <div class="app-modal-head">
+            <div>
+                <h2 id="medicalDocumentsTitle"><span class="patient-inline-icon cyan"><?= $icon('document') ?></span>Medical Documents</h2>
+                <p class="ops-panel-subtext">Patient uploads and hospital discharge documents are listed here.</p>
             </div>
+            <button class="modal-close" type="button" data-modal-close aria-label="Close">x</button>
+        </div>
+        <div class="app-modal-body">
             <form method="post" action="<?= e(url('/patient/documents')) ?>" enctype="multipart/form-data" class="grid-form compact">
                 <?= csrf_field() ?>
                 <label>Title
@@ -306,7 +366,7 @@ $icon = static function (string $name): string {
                     <article class="doc-card">
                         <div>
                             <h3><?= e($document['title']) ?></h3>
-                            <p class="muted"><?= e($document['document_category']) ?> | <?= e(format_datetime($document['uploaded_at'])) ?></p>
+                            <p class="muted"><?= e($document['document_category']) ?> | <?= e($documentSourceLabel($document)) ?> | <?= e(format_datetime($document['uploaded_at'])) ?></p>
                             <p><?= e($document['description'] ?? 'No description provided.') ?></p>
                         </div>
                         <div class="actions-row">
@@ -319,19 +379,26 @@ $icon = static function (string $name): string {
                     <div class="patient-empty-card">No medical documents uploaded yet.</div>
                 <?php endif; ?>
             </div>
-        </article>
-    </section>
-
-    <section class="panel patient-hospital-panel" id="patient-hospitals-section">
-        <div class="patient-panel-head">
-            <div>
-                <h2><span class="patient-inline-icon teal"><?= $icon('hospital') ?></span>Nearby Registered Hospitals</h2>
-                <p class="muted">Only hospitals stored in the HealthFirst database are ranked here.</p>
-            </div>
         </div>
-        <div id="patientHospitalMap" class="map-box" data-api-key="<?= e($mapsApiKey) ?>"></div>
-        <div id="patientHospitalNotice" class="notice-area">Searching your nearest hospitals...</div>
-        <div id="patientHospitalList" class="patient-hospital-list"></div>
     </section>
-</section>
+</div>
+
+<div class="app-modal app-modal-wide" id="nearbyHospitalsModal" hidden>
+    <div class="app-modal-backdrop" data-modal-close></div>
+    <section class="app-modal-panel" role="dialog" aria-modal="true" aria-labelledby="nearbyHospitalsTitle">
+        <div class="app-modal-head">
+            <div>
+                <h2 id="nearbyHospitalsTitle"><span class="patient-inline-icon teal"><?= $icon('hospital') ?></span>Nearby Registered Hospitals</h2>
+                <p class="ops-panel-subtext">Only hospitals stored in the HealthFirst database are ranked here.</p>
+            </div>
+            <button class="modal-close" type="button" data-modal-close aria-label="Close">x</button>
+        </div>
+        <div class="app-modal-body patient-hospital-modal">
+            <div id="patientHospitalMap" class="map-box" data-api-key="<?= e($mapsApiKey) ?>"></div>
+            <div id="patientHospitalNotice" class="notice-area">Open this panel to search your nearest hospitals.</div>
+            <div id="patientHospitalList" class="patient-hospital-list"></div>
+        </div>
+    </section>
+</div>
+
 <script src="<?= e(asset('js/modules/patient.js')) ?>" defer></script>

@@ -24,6 +24,7 @@ $icon = static function (string $name): string {
     <meta name="csrf-token" content="<?= e(\App\Core\Security::csrfToken()) ?>">
     <title><?= e($pageTitle) ?></title>
     <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">
+    <script src="<?= e(asset('js/app.js')) ?>" defer></script>
 </head>
 <body>
     <div class="app-shell">
@@ -40,11 +41,11 @@ $icon = static function (string $name): string {
                                 <span class="nav-icon"><?= $icon('dashboard') ?></span>
                                 <span>Dashboard</span>
                             </a>
-                            <a class="nav-link" href="<?= e(url('/patient/dashboard#profile-summary')) ?>">
+                            <a class="nav-link" href="<?= e(url('/patient/dashboard#editProfileModal')) ?>" data-modal-open="editProfileModal">
                                 <span class="nav-icon"><?= $icon('profile') ?></span>
                                 <span>Profile</span>
                             </a>
-                            <a class="nav-link" href="<?= e(url('/patient/dashboard#patient-qr-section')) ?>">
+                            <a class="nav-link" href="<?= e(url('/patient/dashboard#patientQrModal')) ?>" data-modal-open="patientQrModal">
                                 <span class="nav-icon"><?= $icon('qr') ?></span>
                                 <span>QR Code</span>
                             </a>
@@ -62,17 +63,45 @@ $icon = static function (string $name): string {
                         <?php else: ?>
                             <span class="nav-pill"><?= e($currentUser['role_name']) ?></span>
                             <?php if ($currentUser['role_slug'] === 'paramedic'): ?>
-                                <a class="nav-link" href="<?= e(url('/ambulance/dashboard')) ?>">Ambulance</a>
+                                <a class="nav-link" href="<?= e(url('/paramedic/dashboard')) ?>">
+                                    <span class="nav-icon"><?= ui_icon('stethoscope') ?></span>
+                                    <span>Paramedic</span>
+                                </a>
+                                <a class="nav-link" href="<?= e(url('/ambulance/dashboard')) ?>">
+                                    <span class="nav-icon"><?= ui_icon('ambulance') ?></span>
+                                    <span>Ambulance</span>
+                                </a>
                             <?php elseif ($currentUser['role_slug'] === 'doctor'): ?>
-                                <a class="nav-link" href="<?= e(url('/doctor/dashboard')) ?>">Doctor</a>
+                                <a class="nav-link" href="<?= e(url('/doctor/dashboard')) ?>">
+                                    <span class="nav-icon"><?= ui_icon('doctor') ?></span>
+                                    <span>Doctor</span>
+                                </a>
+                            <?php elseif ($currentUser['role_slug'] === 'hospital_staff'): ?>
+                                <a class="nav-link" href="<?= e(url('/hospital/dashboard')) ?>">
+                                    <span class="nav-icon"><?= ui_icon('hospital') ?></span>
+                                    <span>Hospital Board</span>
+                                </a>
                             <?php elseif ($currentUser['role_slug'] === 'hospital_admin'): ?>
-                                <a class="nav-link" href="<?= e(url('/admin/hospital')) ?>">Hospital Admin</a>
+                                <a class="nav-link" href="<?= e(url('/admin/hospital')) ?>">
+                                    <span class="nav-icon"><?= ui_icon('shield') ?></span>
+                                    <span>Hospital Admin</span>
+                                </a>
+                                <a class="nav-link" href="<?= e(url('/hospital/dashboard')) ?>">
+                                    <span class="nav-icon"><?= ui_icon('activity') ?></span>
+                                    <span>Live Board</span>
+                                </a>
                             <?php elseif ($currentUser['role_slug'] === 'system_admin'): ?>
-                                <a class="nav-link" href="<?= e(url('/admin/system')) ?>">System Admin</a>
+                                <a class="nav-link" href="<?= e(url('/admin/system')) ?>">
+                                    <span class="nav-icon"><?= ui_icon('shield') ?></span>
+                                    <span>System Admin</span>
+                                </a>
                             <?php endif; ?>
                             <form method="post" action="<?= e(url('/logout')) ?>" class="inline-form">
                                 <?= csrf_field() ?>
-                                <button class="link-button nav-link logout-link" type="submit">Logout</button>
+                                <button class="link-button nav-link logout-link" type="submit">
+                                    <span class="nav-icon"><?= $icon('logout') ?></span>
+                                    <span>Logout</span>
+                                </button>
                             </form>
                         <?php endif; ?>
                     <?php else: ?>
@@ -88,13 +117,15 @@ $icon = static function (string $name): string {
         </header>
 
         <?php foreach (flash_messages() as $flash): ?>
-            <div class="flash flash-<?= e($flash['type']) ?>"><?= e($flash['message']) ?></div>
+            <div class="flash flash-<?= e($flash['type']) ?>" role="status">
+                <span><?= e($flash['message']) ?></span>
+                <button class="flash-dismiss" type="button" data-flash-dismiss aria-label="Remove notification">x</button>
+            </div>
         <?php endforeach; ?>
 
         <main class="page-container">
             <?= $content ?>
         </main>
     </div>
-    <script src="<?= e(asset('js/app.js')) ?>" defer></script>
 </body>
 </html>

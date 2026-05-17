@@ -16,6 +16,8 @@ use App\Models\User;
 use App\Services\DocumentService;
 use App\Services\MapsService;
 use App\Services\QrCodeService;
+use App\Services\ValidationService;
+use InvalidArgumentException;
 use Throwable;
 
 final class PatientController extends Controller
@@ -28,7 +30,7 @@ final class PatientController extends Controller
         $qr = (new QrCodeService())->ensureForUser($userId);
         $profile = (new MedicalProfile())->findByUserId($userId);
         $contacts = (new EmergencyContact())->listByUserId($userId);
-        $documents = (new MedicalDocument())->listByUserId($userId);
+        $documents = (new MedicalDocument())->listVisibleToPatientByUserId($userId);
 
         $this->render('patient/dashboard', [
             'title' => 'Patient Dashboard',
@@ -46,40 +48,58 @@ final class PatientController extends Controller
         $this->validateCsrf();
         $user = Auth::user();
 
-        (new User())->updateSelf((int) $user['user_id'], [
-            'full_name' => trim((string) $_POST['full_name']),
-            'phone' => trim((string) $_POST['phone']),
-            'address' => trim((string) $_POST['address']),
-            'date_of_birth' => $_POST['date_of_birth'] ?? null,
-            'profile_latitude' => $_POST['profile_latitude'] ?? null,
-            'profile_longitude' => $_POST['profile_longitude'] ?? null,
-        ]);
+        try {
+            $fullName = trim((string) ($_POST['full_name'] ?? ''));
+            $address = trim((string) ($_POST['address'] ?? ''));
+            if ($fullName === '' || $address === '') {
+                throw new InvalidArgumentException('Full name and address are required.');
+            }
 
-        (new MedicalProfile())->upsert((int) $user['user_id'], [
-            'blood_group' => $_POST['blood_group'] ?? 'Unknown',
-            'allergies' => $_POST['allergies'] ?? null,
-            'chronic_conditions' => $_POST['chronic_conditions'] ?? null,
-            'notes' => $_POST['notes'] ?? null,
-            'emergency_phone' => $_POST['emergency_phone'] ?? null,
-        ]);
+            $location = ValidationService::assertLocation($_POST['profile_latitude'] ?? null, $_POST['profile_longitude'] ?? null);
 
-        Flash::success('Profile updated successfully.');
-        $this->redirect('/patient/dashboard');
+            (new User())->updateSelf((int) $user['user_id'], [
+                'full_name' => $fullName,
+                'phone' => ValidationService::assertPhone((string) ($_POST['phone'] ?? '')),
+                'address' => $address,
+                'date_of_birth' => $_POST['date_of_birth'] ?? null,
+                'profile_latitude' => $location['latitude'],
+                'profile_longitude' => $location['longitude'],
+            ]);
+
+            (new MedicalProfile())->upsert((int) $user['user_id'], [
+                'blood_group' => ValidationService::assertBloodGroup((string) ($_POST['blood_group'] ?? 'Unknown')),
+                'allergies' => $_POST['allergies'] ?? null,
+                'chronic_conditions' => $_POST['chronic_conditions'] ?? null,
+                'notes' => $_POST['notes'] ?? null,
+                'emergency_phone' => ValidationService::assertOptionalPhone($_POST['emergency_phone'] ?? null, 'Emergency phone'),
+            ]);
+
+            Flash::success('Profile updated successfully.');
+        } catch (Throwable $exception) {
+            Flash::error('Unable to update profile: ' . $exception->getMessage());
+        }
+
+        $this->redirect('/patient/dashboard#editProfileModal');
     }
 
     public function saveContact(): void
     {
         $this->validateCsrf();
 
-        (new EmergencyContact())->create((int) Auth::id(), [
-            'contact_name' => trim((string) $_POST['contact_name']),
-            'relationship' => trim((string) ($_POST['relationship'] ?? '')),
-            'phone_number' => trim((string) $_POST['phone_number']),
-            'is_primary' => !empty($_POST['is_primary']),
-        ]);
+        try {
+            (new EmergencyContact())->create((int) Auth::id(), [
+                'contact_name' => trim((string) $_POST['contact_name']),
+                'relationship' => trim((string) ($_POST['relationship'] ?? '')),
+                'phone_number' => ValidationService::assertPhone((string) ($_POST['phone_number'] ?? ''), 'Emergency contact phone'),
+                'is_primary' => !empty($_POST['is_primary']),
+            ]);
 
-        Flash::success('Emergency contact saved.');
-        $this->redirect('/patient/dashboard');
+            Flash::success('Emergency contact saved.');
+        } catch (Throwable $exception) {
+            Flash::error('Unable to save emergency contact: ' . $exception->getMessage());
+        }
+
+        $this->redirect('/patient/dashboard#contactManageModal');
     }
 
     public function uploadDocument(): void

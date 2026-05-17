@@ -12,8 +12,9 @@ use App\Models\MedicalDocument;
 
 final class DocumentController extends Controller
 {
-    public function download(int $documentId): void
+    public function download(string|int $documentId): void
     {
+        $documentId = (int) $documentId;
         $document = (new MedicalDocument())->findById($documentId);
         if ($document === null || !$this->canAccessDocument($document)) {
             http_response_code(404);
@@ -33,8 +34,9 @@ final class DocumentController extends Controller
         exit;
     }
 
-    public function injuryReport(int $incidentId): void
+    public function injuryReport(string|int $incidentId): void
     {
+        $incidentId = (int) $incidentId;
         $incident = (new Incident())->findDetailedById($incidentId);
         if ($incident === null || empty($incident['report_file_path']) || !$this->canAccessIncident($incident)) {
             http_response_code(404);
@@ -71,7 +73,7 @@ final class DocumentController extends Controller
             return (new DoctorCaseAssignment())->doctorHasAccessToUser((int) $user['user_id'], (int) $document['user_id']);
         }
 
-        if (in_array($user['role_slug'], ['doctor', 'hospital_admin', 'paramedic'], true) && !empty($document['incident_id'])) {
+        if (in_array($user['role_slug'], ['doctor', 'hospital_staff', 'hospital_admin', 'paramedic'], true) && !empty($document['incident_id'])) {
             $incident = (new Incident())->findDetailedById((int) $document['incident_id']);
             return $incident !== null && $this->canAccessIncident($incident);
         }
@@ -89,8 +91,9 @@ final class DocumentController extends Controller
         return match ($user['role_slug']) {
             'system_admin' => true,
             'patient' => (int) $incident['user_id'] === (int) $user['user_id'],
-            'doctor' => (int) ($incident['doctor_user_id'] ?? 0) === (int) $user['user_id'],
-            'hospital_admin', 'paramedic' => (int) ($incident['hospital_id'] ?? $incident['selected_hospital_id'] ?? 0) === (int) ($user['hospital_id'] ?? 0),
+            'doctor' => (int) ($incident['doctor_user_id'] ?? 0) === (int) $user['user_id']
+                || (int) ($incident['hospital_id'] ?? $incident['selected_hospital_id'] ?? 0) === (int) ($user['hospital_id'] ?? 0),
+            'hospital_staff', 'hospital_admin', 'paramedic' => (int) ($incident['hospital_id'] ?? $incident['selected_hospital_id'] ?? 0) === (int) ($user['hospital_id'] ?? 0),
             default => false,
         };
     }

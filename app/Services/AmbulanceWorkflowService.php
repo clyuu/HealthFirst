@@ -15,6 +15,8 @@ use RuntimeException;
 
 final class AmbulanceWorkflowService
 {
+    private const DUPLICATE_LOCATION_RADIUS_METERS = 100;
+
     public function updateLocation(int $paramedicUserId, int $incidentId, float $latitude, float $longitude, ?float $speed = null): array
     {
         $ambulance = (new Ambulance())->findByParamedicUserId($paramedicUserId);
@@ -22,19 +24,32 @@ final class AmbulanceWorkflowService
             throw new RuntimeException('No active ambulance is assigned to this paramedic.');
         }
 
+        $ambulanceId = (int) $ambulance['ambulance_id'];
+        $locations = new AmbulanceLocation();
+        $latest = $locations->latestForAmbulanceIncident($ambulanceId, $incidentId);
+        $shouldStoreLocation = $latest === null || $this->distanceMeters(
+            (float) $latest['latitude'],
+            (float) $latest['longitude'],
+            $latitude,
+            $longitude
+        ) >= self::DUPLICATE_LOCATION_RADIUS_METERS;
+
         (new Ambulance())->updateLocation((int) $ambulance['ambulance_id'], $latitude, $longitude);
-        (new AmbulanceLocation())->store([
-            'ambulance_id' => $ambulance['ambulance_id'],
-            'incident_id' => $incidentId,
-            'latitude' => $latitude,
-            'longitude' => $longitude,
-            'speed_kmh' => $speed,
-        ]);
+        if ($shouldStoreLocation) {
+            $locations->store([
+                'ambulance_id' => $ambulanceId,
+                'incident_id' => $incidentId,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'speed_kmh' => $speed,
+            ]);
+        }
 
         return [
-            'ambulance_id' => (int) $ambulance['ambulance_id'],
+            'ambulance_id' => $ambulanceId,
             'latitude' => $latitude,
             'longitude' => $longitude,
+            'location_recorded' => $shouldStoreLocation,
         ];
     }
 
@@ -46,6 +61,15 @@ final class AmbulanceWorkflowService
         if ($ambulance === null || $incident === null) {
             throw new RuntimeException('Unable to resolve ambulance pickup context.');
         }
+
+        (new Ambulance())->updateLocation((int) $ambulance['ambulance_id'], $latitude, $longitude);
+        (new AmbulanceLocation())->store([
+            'ambulance_id' => $ambulance['ambulance_id'],
+            'incident_id' => $incidentId,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'source' => 'gps',
+        ]);
 
         $route = (new MapsService())->computeRoute(
             $latitude,
@@ -65,6 +89,45 @@ final class AmbulanceWorkflowService
             'hospital_latitude' => (float) $incident['hospital_latitude'],
             'hospital_longitude' => (float) $incident['hospital_longitude'],
         ];
+    }
+
+    public function arriveAtHospital(int $paramedicUserId, int $incidentId): array
+    {
+        $ambulance = (new Ambulance())->findByParamedicUserId($paramedicUserId);
+        $incident = (new Incident())->findDetailedById($incidentId);
+
+        if ($ambulance === null || $incident === null) {
+            throw new RuntimeException('Unable to resolve ambulance arrival context.');
+        }
+
+        if ((int) ($incident['ambulance_id'] ?? 0) !== (int) $ambulance['ambulance_id']) {
+            throw new RuntimeException('This incident is not assigned to your ambulance.');
+        }
+
+        if (!in_array((string) ($incident['status'] ?? ''), ['patient_picked_up', 'en_route_hospital'], true)) {
+            throw new RuntimeException('Patient must be picked up before hospital arrival can be confirmed.');
+        }
+
+        (new Dispatch())->markArrivedAtHospital($incidentId);
+        (new Ambulance())->updateStatus((int) $ambulance['ambulance_id'], 'available');
+        (new Incident())->updateStatus($incidentId, 'en_route_hospital', $paramedicUserId, 'Ambulance confirmed patient arrival at hospital.');
+
+        return [
+            'incident_id' => $incidentId,
+            'status' => 'arrived_hospital',
+            'message' => 'Patient arrival at hospital confirmed.',
+        ];
+    }
+
+    private function distanceMeters(float $lat1, float $lng1, float $lat2, float $lng2): float
+    {
+        $earthRadiusMeters = 6371000;
+        $latDelta = deg2rad($lat2 - $lat1);
+        $lngDelta = deg2rad($lng2 - $lng1);
+        $a = sin($latDelta / 2) ** 2
+            + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($lngDelta / 2) ** 2;
+
+        return $earthRadiusMeters * (2 * atan2(sqrt($a), sqrt(1 - $a)));
     }
 
     public function saveVitals(array $data): void
@@ -126,10 +189,19 @@ final class AmbulanceWorkflowService
             throw new RuntimeException('Incident not found for injury session.');
         }
 
+        $storedPredictions = array_map(static fn (array $prediction): array => [
+            'predicted_label' => $prediction['predicted_label'] ?? 'Normal (No Visible Injury)',
+            'confidence_score' => (float) ($prediction['confidence_score'] ?? 0),
+            'burns_probability' => (float) ($prediction['burns_probability'] ?? 0),
+            'cuts_probability' => (float) ($prediction['cuts_probability'] ?? 0),
+            'normal_probability' => (float) ($prediction['normal_probability'] ?? 0),
+        ], $sessionModel->predictions($sessionId));
+
         $report = (new AIClient())->finalizeInjurySession($sessionId, [
             'patient_name' => $incident['patient_name'],
             'incident_id' => $incident['incident_id'],
             'special_note' => $context['special_note'] ?? $session['special_note'],
+            'predictions' => $storedPredictions,
         ]);
 
         $sessionModel->finalize($sessionId, [
@@ -138,6 +210,10 @@ final class AmbulanceWorkflowService
             'report_file_path' => $report['report_file_path'] ?? null,
             'special_note' => $context['special_note'] ?? $session['special_note'],
         ]);
+
+        if (!empty($report['report_file_path'])) {
+            $this->refreshReportTemplate((int) $incident['incident_id']);
+        }
 
         if (!empty($report['report_file_path'])) {
             (new MedicalDocument())->create([
@@ -159,5 +235,21 @@ final class AmbulanceWorkflowService
 
         return $report;
     }
-}
 
+    private function refreshReportTemplate(int $incidentId): void
+    {
+        $python = (string) config_value('services.python_bin', 'python');
+        $script = base_path('bin/regenerate_injury_reports.py');
+        if (!is_file($script)) {
+            return;
+        }
+
+        $command = escapeshellarg($python) . ' ' . escapeshellarg($script) . ' --incident ' . $incidentId;
+        $output = [];
+        $exitCode = 0;
+        exec($command . ' 2>&1', $output, $exitCode);
+        if ($exitCode !== 0) {
+            error_log('Injury report template refresh failed: ' . implode(' | ', $output));
+        }
+    }
+}

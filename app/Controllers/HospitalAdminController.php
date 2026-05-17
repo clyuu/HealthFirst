@@ -12,6 +12,7 @@ use App\Models\Hospital;
 use App\Models\HospitalStaff;
 use App\Models\Incident;
 use App\Models\User;
+use App\Services\ValidationService;
 use Throwable;
 
 final class HospitalAdminController extends Controller
@@ -40,10 +41,10 @@ final class HospitalAdminController extends Controller
             $userId = (new User())->createStaff([
                 'role_slug' => $_POST['role_slug'],
                 'full_name' => trim((string) $_POST['full_name']),
-                'nic_number' => trim((string) $_POST['nic_number']),
+                'nic_number' => ValidationService::assertNic((string) ($_POST['nic_number'] ?? '')),
                 'email' => trim((string) $_POST['email']),
-                'phone' => trim((string) $_POST['phone']),
-                'password' => (string) $_POST['password'],
+                'phone' => ValidationService::assertPhone((string) ($_POST['phone'] ?? '')),
+                'password' => ValidationService::assertPassword((string) ($_POST['password'] ?? '')),
                 'date_of_birth' => $_POST['date_of_birth'] ?? null,
                 'gender' => $_POST['gender'] ?? null,
                 'address' => trim((string) ($_POST['address'] ?? '')),
@@ -89,4 +90,3 @@ final class HospitalAdminController extends Controller
         $this->redirect('/admin/hospital');
     }
 }
-

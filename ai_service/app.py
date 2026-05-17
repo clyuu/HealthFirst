@@ -41,6 +41,44 @@ def ensure_session(session_id: int) -> dict:
         return sessions[session_id]
 
 
+def normalize_injury_predictions(raw_predictions) -> list[dict]:
+    normalized: list[dict] = []
+    if not isinstance(raw_predictions, list):
+        return normalized
+
+    for item in raw_predictions:
+        if not isinstance(item, dict):
+            continue
+
+        label = item.get("predicted_label")
+        if label not in CLASS_LABELS.values():
+            label = "Normal (No Visible Injury)"
+
+        confidence = item.get("confidence", item.get("confidence_score", 0.0))
+        try:
+            confidence = round(float(confidence), 2)
+        except (TypeError, ValueError):
+            confidence = 0.0
+
+        probabilities = item.get("probabilities")
+        if not isinstance(probabilities, dict):
+            probabilities = {
+                "Burns": float(item.get("burns_probability", 0) or 0),
+                "Cuts & Bleeding": float(item.get("cuts_probability", 0) or 0),
+                "Normal (No Visible Injury)": float(item.get("normal_probability", 0) or 0),
+            }
+
+        normalized.append(
+            {
+                "predicted_label": label,
+                "confidence": confidence,
+                "probabilities": probabilities,
+            }
+        )
+
+    return normalized
+
+
 @app.get("/health")
 def health() -> tuple:
     return jsonify(
@@ -121,7 +159,7 @@ def analyze_injury(session_id: int) -> tuple:
 def finalize_injury_session(session_id: int) -> tuple:
     payload = request.get_json(silent=True) or {}
     session = ensure_session(session_id)
-    predictions = session.get("predictions", [])
+    predictions = normalize_injury_predictions(payload.get("predictions")) or session.get("predictions", [])
 
     if not predictions:
         predictions = [
@@ -175,6 +213,7 @@ def finalize_injury_session(session_id: int) -> tuple:
         percentages=percentages,
         special_note=payload.get("special_note"),
         average_confidence=round(total_confidence / total_images, 2),
+        predictions=predictions,
     )
 
     return (

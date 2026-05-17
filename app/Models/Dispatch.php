@@ -67,8 +67,19 @@ final class Dispatch extends Model
     {
         $stmt = $this->db->prepare(
             'UPDATE dispatch
-             SET arrived_hospital_at = CURRENT_TIMESTAMP,
+             SET arrived_hospital_at = COALESCE(arrived_hospital_at, CURRENT_TIMESTAMP),
                  dispatch_status = "admitted"
+             WHERE incident_id = :incident_id'
+        );
+        $stmt->execute(['incident_id' => $incidentId]);
+    }
+
+    public function markArrivedAtHospital(int $incidentId): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE dispatch
+             SET arrived_hospital_at = COALESCE(arrived_hospital_at, CURRENT_TIMESTAMP),
+                 dispatch_status = "en_route_hospital"
              WHERE incident_id = :incident_id'
         );
         $stmt->execute(['incident_id' => $incidentId]);
@@ -84,4 +95,3 @@ final class Dispatch extends Model
         $stmt->execute(['incident_id' => $incidentId]);
     }
 }
-

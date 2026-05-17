@@ -5,6 +5,7 @@ SET @pwd := '$2y$10$Ryk.0gJyiPNRJbSYjr3PC.WETGqce4dJs1kchdwFLfG01gCKUo7g6';
 INSERT INTO roles (slug, role_name, description) VALUES
 ('system_admin', 'System Admin', 'Platform-wide administrator'),
 ('hospital_admin', 'Hospital Admin', 'Hospital operations administrator'),
+('hospital_staff', 'Hospital Dashboard Staff', 'Front desk and emergency board staff'),
 ('doctor', 'Doctor', 'Assigned medical doctor'),
 ('paramedic', 'Paramedic', 'Ambulance and pre-hospital staff'),
 ('patient', 'Patient', 'Public patient account');
@@ -18,6 +19,8 @@ INSERT INTO users (role_id, full_name, nic_number, email, phone, address, passwo
 ((SELECT role_id FROM roles WHERE slug = 'system_admin'), 'Super Admin', '850000000V', 'admin@healthfirst.lk', '0770000001', 'Colombo', @pwd, '1985-01-10', 'Male', NULL, NULL),
 ((SELECT role_id FROM roles WHERE slug = 'hospital_admin'), 'Hospital Admin One', '860000001V', 'hadmin1@healthfirst.lk', '0771000001', 'National Hospital', @pwd, '1986-03-15', 'Female', NULL, NULL),
 ((SELECT role_id FROM roles WHERE slug = 'hospital_admin'), 'Hospital Admin Two', '860000002V', 'hadmin2@healthfirst.lk', '0771000002', 'Nawaloka Hospital', @pwd, '1987-07-12', 'Female', NULL, NULL),
+((SELECT role_id FROM roles WHERE slug = 'hospital_staff'), 'Hospital Desk One', '860000009V', 'hdesk1@healthfirst.lk', '0771000009', 'National Hospital', @pwd, '1990-02-10', 'Female', NULL, NULL),
+((SELECT role_id FROM roles WHERE slug = 'hospital_staff'), 'Hospital Desk Two', '860000010V', 'hdesk2@healthfirst.lk', '0771000010', 'Nawaloka Hospital', @pwd, '1991-11-03', 'Male', NULL, NULL),
 ((SELECT role_id FROM roles WHERE slug = 'doctor'), 'Dr. Amila Perera', '820000003V', 'doctor1@healthfirst.lk', '0772000001', 'Colombo', @pwd, '1982-04-04', 'Male', NULL, NULL),
 ((SELECT role_id FROM roles WHERE slug = 'doctor'), 'Dr. Nethmi Silva', '830000004V', 'doctor2@healthfirst.lk', '0772000002', 'Colombo', @pwd, '1983-09-20', 'Female', NULL, NULL),
 ((SELECT role_id FROM roles WHERE slug = 'paramedic'), 'Kamal Perera', '920000005V', 'paramedic1@healthfirst.lk', '0773000001', 'Colombo', @pwd, '1992-05-11', 'Male', NULL, NULL),
@@ -28,6 +31,8 @@ INSERT INTO users (role_id, full_name, nic_number, email, phone, address, passwo
 INSERT INTO hospital_staff (user_id, hospital_id, designation) VALUES
 ((SELECT user_id FROM users WHERE email = 'hadmin1@healthfirst.lk'), 1, 'Primary Hospital Administrator'),
 ((SELECT user_id FROM users WHERE email = 'hadmin2@healthfirst.lk'), 2, 'Primary Hospital Administrator'),
+((SELECT user_id FROM users WHERE email = 'hdesk1@healthfirst.lk'), 1, 'Emergency Front Desk'),
+((SELECT user_id FROM users WHERE email = 'hdesk2@healthfirst.lk'), 2, 'Emergency Front Desk'),
 ((SELECT user_id FROM users WHERE email = 'doctor1@healthfirst.lk'), 1, 'Emergency Physician'),
 ((SELECT user_id FROM users WHERE email = 'doctor2@healthfirst.lk'), 2, 'Trauma Surgeon'),
 ((SELECT user_id FROM users WHERE email = 'paramedic1@healthfirst.lk'), 1, 'Lead Paramedic'),
@@ -107,4 +112,3 @@ INSERT INTO injury_image_predictions (session_id, incident_id, image_path, predi
 
 INSERT INTO doctor_case_assignments (incident_id, doctor_user_id, hospital_id, status, assigned_at, admitted_at) VALUES
 (4, (SELECT user_id FROM users WHERE email = 'doctor1@healthfirst.lk'), 1, 'admitted', NOW() - INTERVAL 23 HOUR, NOW() - INTERVAL 23 HOUR);
-

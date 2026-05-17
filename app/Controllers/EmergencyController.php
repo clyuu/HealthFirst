@@ -27,6 +27,15 @@ final class EmergencyController extends Controller
         ]);
     }
 
+    public function manualLanding(): void
+    {
+        $this->render('emergency/landing', [
+            'title' => 'Emergency Report',
+            'publicToken' => null,
+            'mapsApiKey' => (string) config_value('services.google_maps_api_key', ''),
+        ]);
+    }
+
     public function submit(): void
     {
         $this->validateCsrf();
@@ -39,4 +48,3 @@ final class EmergencyController extends Controller
         }
     }
 }
-

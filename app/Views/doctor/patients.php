@@ -18,26 +18,14 @@
 
             <h3>Medical Documents</h3>
             <div class="doc-grid">
-                <?php foreach ($documents[(int) $patient['user_id']] ?? [] as $document): ?>
+                <?php $patientDocuments = $documents[(int) $patient['user_id']] ?? []; ?>
+                <?php foreach ($patientDocuments as $document): ?>
                     <a class="doc-chip" href="<?= e(url('/documents/' . $document['document_id'] . '/download?inline=1')) ?>" target="_blank"><?= e($document['title']) ?></a>
                 <?php endforeach; ?>
+                <?php if ($patientDocuments === []): ?>
+                    <p class="muted">No patient-uploaded documents available.</p>
+                <?php endif; ?>
             </div>
-
-            <form method="post" action="<?= e(url('/doctor/cases/' . $patient['case_assignment_id'] . '/documents')) ?>" enctype="multipart/form-data" class="grid-form compact">
-                <?= csrf_field() ?>
-                <label>Document title
-                    <input type="text" name="title" required>
-                </label>
-                <label class="span-2">Description
-                    <textarea name="description" rows="2"></textarea>
-                </label>
-                <label class="span-2">File
-                    <input type="file" name="document" required>
-                </label>
-                <div class="span-2 actions-row">
-                    <button class="button secondary" type="submit">Add Documents</button>
-                </div>
-            </form>
 
             <form method="post" action="<?= e(url('/doctor/cases/' . $patient['case_assignment_id'] . '/discharge')) ?>" class="inline-form">
                 <?= csrf_field() ?>
@@ -46,4 +34,3 @@
         </article>
     <?php endforeach; ?>
 </section>
-

@@ -53,5 +53,18 @@ final class QrCode extends Model
 
         return (int) $this->db->lastInsertId();
     }
-}
 
+    public function refreshGeneratedCode(int $qrId, string $qrValue, string $imagePath): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE qr_codes
+             SET qr_value = :qr_value, image_path = :image_path
+             WHERE qr_id = :qr_id'
+        );
+        $stmt->execute([
+            'qr_id' => $qrId,
+            'qr_value' => $qrValue,
+            'image_path' => $imagePath,
+        ]);
+    }
+}

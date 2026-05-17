@@ -59,9 +59,9 @@ final class Ambulance extends Model
     {
         $stmt = $this->db->prepare(
             'INSERT INTO ambulances (
-                hospital_id, ambulance_number, status, capacity_stretchers
+                hospital_id, ambulance_number, status, capacity_stretchers, current_latitude, current_longitude
              ) VALUES (
-                :hospital_id, :ambulance_number, :status, :capacity_stretchers
+                :hospital_id, :ambulance_number, :status, :capacity_stretchers, :current_latitude, :current_longitude
              )'
         );
         $stmt->execute([
@@ -69,6 +69,8 @@ final class Ambulance extends Model
             'ambulance_number' => $data['ambulance_number'],
             'status' => $data['status'] ?? 'available',
             'capacity_stretchers' => $data['capacity_stretchers'] ?? 1,
+            'current_latitude' => $data['current_latitude'] ?? null,
+            'current_longitude' => $data['current_longitude'] ?? null,
         ]);
 
         return (int) $this->db->lastInsertId();
@@ -120,4 +122,3 @@ final class Ambulance extends Model
         ]);
     }
 }
-

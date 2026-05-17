@@ -24,12 +24,12 @@ final class HomeController extends Controller
     {
         return match ($role) {
             'patient' => '/patient/dashboard',
-            'paramedic' => '/ambulance/dashboard',
+            'paramedic' => '/paramedic/dashboard',
             'doctor' => '/doctor/dashboard',
+            'hospital_staff' => '/hospital/dashboard',
             'hospital_admin' => '/admin/hospital',
             'system_admin' => '/admin/system',
             default => '/',
         };
     }
 }
-
