@@ -35,6 +35,19 @@ final class User extends Model
         return $stmt->fetch() ?: null;
     }
 
+    public function findByPhone(string $phone): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT u.*, r.slug AS role_slug, r.role_name
+             FROM users u
+             INNER JOIN roles r ON r.role_id = u.role_id
+             WHERE u.phone = :phone
+             LIMIT 1'
+        );
+        $stmt->execute(['phone' => $phone]);
+        return $stmt->fetch() ?: null;
+    }
+
     public function findDetailedById(int $userId): ?array
     {
         $stmt = $this->db->prepare(
@@ -136,7 +149,7 @@ final class User extends Model
              INNER JOIN users u ON u.user_id = hs.user_id
              INNER JOIN roles r ON r.role_id = u.role_id
              WHERE hs.hospital_id = :hospital_id
-             ORDER BY FIELD(r.slug, "hospital_admin", "doctor", "paramedic"), u.full_name'
+             ORDER BY FIELD(r.slug, "hospital_admin", "hospital_staff", "doctor", "paramedic"), u.full_name'
         );
         $stmt->execute(['hospital_id' => $hospitalId]);
         return $stmt->fetchAll();

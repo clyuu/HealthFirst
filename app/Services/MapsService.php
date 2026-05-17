@@ -8,9 +8,68 @@ use App\Models\Hospital;
 
 final class MapsService
 {
+    public function geocode(string $query): ?array
+    {
+        $query = trim($query);
+        if ($query === '') {
+            return null;
+        }
+
+        $apiKey = (string) config_value('services.google_maps_api_key', '');
+        if ($apiKey === '') {
+            return null;
+        }
+
+        $response = $this->getJson('https://maps.googleapis.com/maps/api/geocode/json?' . http_build_query([
+            'address' => $query,
+            'components' => 'country:LK',
+            'key' => $apiKey,
+        ]));
+
+        if ($response === null) {
+            return null;
+        }
+
+        $decoded = json_decode($response, true);
+        if (($decoded['status'] ?? '') === 'OK' && !empty($decoded['results'][0]['geometry']['location'])) {
+            $result = $decoded['results'][0];
+            return [
+                'latitude' => (float) $result['geometry']['location']['lat'],
+                'longitude' => (float) $result['geometry']['location']['lng'],
+                'formatted_address' => (string) ($result['formatted_address'] ?? $query),
+            ];
+        }
+
+        return $this->placeTextSearch($query, $apiKey);
+    }
+
+    private function placeTextSearch(string $query, string $apiKey): ?array
+    {
+        $response = $this->getJson('https://maps.googleapis.com/maps/api/place/textsearch/json?' . http_build_query([
+            'query' => $query . ' Sri Lanka',
+            'key' => $apiKey,
+        ]));
+
+        if ($response === null) {
+            return null;
+        }
+
+        $decoded = json_decode($response, true);
+        if (($decoded['status'] ?? '') !== 'OK' || empty($decoded['results'][0]['geometry']['location'])) {
+            return null;
+        }
+
+        $result = $decoded['results'][0];
+        return [
+            'latitude' => (float) $result['geometry']['location']['lat'],
+            'longitude' => (float) $result['geometry']['location']['lng'],
+            'formatted_address' => (string) ($result['formatted_address'] ?? $result['name'] ?? $query),
+        ];
+    }
+
     public function rankHospitals(float $latitude, float $longitude, int $limit = 3): array
     {
-        $hospitals = (new Hospital())->shortlistByDistance($latitude, $longitude, $limit);
+        $hospitals = (new Hospital())->shortlistByDistance($latitude, $longitude, $limit, false);
         if ($hospitals === []) {
             return [];
         }
@@ -179,6 +238,25 @@ final class MapsService
         return $response;
     }
 
+    private function getJson(string $url): ?string
+    {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 15,
+        ]);
+
+        $response = curl_exec($ch);
+        $statusCode = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        curl_close($ch);
+
+        if ($response === false || $statusCode >= 400) {
+            return null;
+        }
+
+        return $response;
+    }
+
     private function haversine(float $lat1, float $lng1, float $lat2, float $lng2): float
     {
         $earthRadius = 6371;
@@ -192,4 +270,3 @@ final class MapsService
         return $earthRadius * (2 * atan2(sqrt($a), sqrt(1 - $a)));
     }
 }
-

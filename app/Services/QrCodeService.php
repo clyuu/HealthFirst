@@ -14,9 +14,12 @@ final class QrCodeService
         $qrModel = new QrCode();
         $existing = $qrModel->findByUserId($userId);
         if ($existing) {
+            $desiredValue = url('/qr/' . $existing['public_token']);
             $existingPath = storage_path($existing['image_path']);
-            if (!is_file($existingPath)) {
-                $this->generateImage($existing['qr_value'], $existingPath);
+            if (!is_file($existingPath) || (string) $existing['qr_value'] !== $desiredValue) {
+                $this->generateImage($desiredValue, $existingPath);
+                $qrModel->refreshGeneratedCode((int) $existing['qr_id'], $desiredValue, (string) $existing['image_path']);
+                $existing = $qrModel->findByUserId($userId) ?? $existing;
             }
             return $existing;
         }

@@ -22,6 +22,39 @@ final class MedicalDocument extends Model
         return $stmt->fetchAll();
     }
 
+    public function listPatientUploadsByUserId(int $userId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT md.*, u.full_name AS uploaded_by_name, h.hospital_name
+             FROM medical_documents md
+             LEFT JOIN users u ON u.user_id = md.uploaded_by_user_id
+             LEFT JOIN hospitals h ON h.hospital_id = md.hospital_id
+             WHERE md.user_id = :user_id
+               AND md.source_type = :source_type
+             ORDER BY md.uploaded_at DESC'
+        );
+        $stmt->execute([
+            'user_id' => $userId,
+            'source_type' => 'patient_upload',
+        ]);
+        return $stmt->fetchAll();
+    }
+
+    public function listVisibleToPatientByUserId(int $userId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT md.*, u.full_name AS uploaded_by_name, h.hospital_name
+             FROM medical_documents md
+             LEFT JOIN users u ON u.user_id = md.uploaded_by_user_id
+             LEFT JOIN hospitals h ON h.hospital_id = md.hospital_id
+             WHERE md.user_id = :user_id
+               AND md.source_type IN ("patient_upload", "hospital_upload")
+             ORDER BY md.uploaded_at DESC'
+        );
+        $stmt->execute(['user_id' => $userId]);
+        return $stmt->fetchAll();
+    }
+
     public function listByIncident(int $incidentId): array
     {
         $stmt = $this->db->prepare(

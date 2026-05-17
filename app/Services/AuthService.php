@@ -37,6 +37,17 @@ final class AuthService
         if ($userModel->findByEmail($data['email'])) {
             throw new InvalidArgumentException('An account already exists for that email address.');
         }
+        $data['nic_number'] = ValidationService::assertNic((string) $data['nic_number']);
+        $data['phone'] = ValidationService::assertPhone((string) $data['phone']);
+        $data['password'] = ValidationService::assertPassword((string) $data['password']);
+        $data['blood_group'] = ValidationService::assertBloodGroup((string) ($data['blood_group'] ?? 'Unknown'));
+        $data['emergency_phone'] = ValidationService::assertOptionalPhone($data['emergency_phone'] ?? null, 'Emergency phone');
+        $location = ValidationService::assertLocation($data['profile_latitude'] ?? null, $data['profile_longitude'] ?? null);
+        if ($location['latitude'] === null || $location['longitude'] === null) {
+            throw new InvalidArgumentException('Please select your home location from the map.');
+        }
+        $data['profile_latitude'] = $location['latitude'];
+        $data['profile_longitude'] = $location['longitude'];
         if ($userModel->findByNic($data['nic_number'])) {
             throw new InvalidArgumentException('An account already exists for that NIC number.');
         }
@@ -47,7 +58,7 @@ final class AuthService
         ]);
 
         (new MedicalProfile())->upsert($userId, [
-            'blood_group' => $data['blood_group'] ?? 'Unknown',
+            'blood_group' => $data['blood_group'],
             'allergies' => $data['allergies'] ?? null,
             'chronic_conditions' => $data['chronic_conditions'] ?? null,
             'notes' => $data['notes'] ?? null,
@@ -55,6 +66,7 @@ final class AuthService
         ]);
 
         if (!empty($data['contact_name']) && !empty($data['contact_phone'])) {
+            $data['contact_phone'] = ValidationService::assertPhone((string) $data['contact_phone'], 'Emergency contact phone');
             (new EmergencyContact())->create($userId, [
                 'contact_name' => $data['contact_name'],
                 'relationship' => $data['contact_relationship'] ?? '',
@@ -70,4 +82,3 @@ final class AuthService
         return ['user_id' => $userId, 'qr' => $qr];
     }
 }
-

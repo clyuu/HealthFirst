@@ -56,6 +56,10 @@ $steps = [
                 <span class="button-icon"><?= $icon('login') ?></span>
                 <span>Login</span>
             </a>
+            <a class="button landing-ghost-btn" href="<?= e(url('/emergency/report')) ?>">
+                <span class="button-icon"><?= $icon('warning') ?></span>
+                <span>Emergency Without QR</span>
+            </a>
         </div>
     </section>
 

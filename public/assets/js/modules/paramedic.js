@@ -1,57 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const root = document.getElementById('ambulanceIncidentList');
+  const root = document.getElementById('paramedicCareList');
   if (!root) return;
-
-  const mapsApiKey = document.getElementById('ambulanceMasterMap')?.dataset.apiKey || '';
-
-  async function initMiniMaps() {
-    const maps = await HealthFirst.loadGoogleMaps(mapsApiKey);
-    if (!maps) return;
-
-    root.querySelectorAll('[data-map-card]').forEach((node) => {
-      if (node.dataset.initialized === '1') return;
-      node.dataset.initialized = '1';
-      const destination = {
-        lat: Number(node.dataset.destLat),
-        lng: Number(node.dataset.destLng),
-      };
-      const origin = {
-        lat: Number(node.dataset.originLat || node.dataset.destLat),
-        lng: Number(node.dataset.originLng || node.dataset.destLng),
-      };
-      const map = new maps.Map(node, {
-        center: destination,
-        zoom: 13,
-        mapTypeControl: false,
-        streetViewControl: false,
-      });
-      new maps.Marker({ map, position: origin, title: 'Ambulance' });
-      new maps.Marker({ map, position: destination, title: 'Incident' });
-    });
-  }
-
-  async function postCurrentLocation() {
-    try {
-      const position = await HealthFirst.getCurrentPosition();
-      const latitude = position.coords.latitude;
-      const longitude = position.coords.longitude;
-      root.querySelectorAll('[data-incident-card]').forEach(async (card) => {
-        const url = root.dataset.locationUrlTemplate.replace('__ID__', card.dataset.incidentId);
-        const formData = new FormData();
-        formData.append('latitude', latitude);
-        formData.append('longitude', longitude);
-        formData.append('speed_kmh', position.coords.speed || '');
-        formData.append('_token', HealthFirst.csrf);
-        try {
-          await HealthFirst.postForm(url, formData);
-        } catch (error) {
-          console.error(error);
-        }
-      });
-    } catch (error) {
-      console.warn(error);
-    }
-  }
 
   root.querySelectorAll('[data-lookup-form]').forEach((form) => {
     form.addEventListener('submit', async (event) => {
@@ -71,22 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         await HealthFirst.postForm(form.action, form);
         window.alert('Vitals saved.');
-      } catch (error) {
-        window.alert(error.message);
-      }
-    });
-  });
-
-  root.querySelectorAll('[data-pickup-button]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      try {
-        const position = await HealthFirst.getCurrentPosition();
-        const formData = new FormData();
-        formData.append('latitude', position.coords.latitude);
-        formData.append('longitude', position.coords.longitude);
-        formData.append('_token', HealthFirst.csrf);
-        await HealthFirst.postForm(button.dataset.url, formData);
-        window.location.reload();
       } catch (error) {
         window.alert(error.message);
       }
@@ -155,8 +88,4 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
-
-  initMiniMaps();
-  postCurrentLocation();
-  window.setInterval(postCurrentLocation, 15000);
 });

@@ -30,8 +30,9 @@ final class AuthController extends Controller
             $user = Auth::user();
             $this->redirect(match ($user['role_slug'] ?? '') {
                 'patient' => '/patient/dashboard',
-                'paramedic' => '/ambulance/dashboard',
+                'paramedic' => '/paramedic/dashboard',
                 'doctor' => '/doctor/dashboard',
+                'hospital_staff' => '/hospital/dashboard',
                 'hospital_admin' => '/admin/hospital',
                 'system_admin' => '/admin/system',
                 default => '/',
@@ -61,7 +62,10 @@ final class AuthController extends Controller
             }
         }
 
-        $this->render('auth/register', ['title' => 'Register']);
+        $this->render('auth/register', [
+            'title' => 'Register',
+            'mapsApiKey' => (string) config_value('services.google_maps_api_key', ''),
+        ]);
     }
 
     public function logout(): void
@@ -72,4 +76,3 @@ final class AuthController extends Controller
         $this->redirect('/login');
     }
 }
-

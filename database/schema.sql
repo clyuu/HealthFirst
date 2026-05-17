@@ -35,8 +35,15 @@ CREATE TABLE hospitals (
     latitude DECIMAL(10, 8) NOT NULL,
     longitude DECIMAL(11, 8) NOT NULL,
     contact_number VARCHAR(30) NOT NULL,
+    ownership VARCHAR(30) NOT NULL DEFAULT 'government',
+    hospital_type VARCHAR(120) NULL,
+    google_place_id VARCHAR(191) NULL,
+    source_url VARCHAR(255) NULL,
+    business_status VARCHAR(50) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE UNIQUE INDEX uq_hospitals_google_place_id ON hospitals (google_place_id);
 
 CREATE TABLE hospital_staff (
     staff_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -127,8 +134,8 @@ CREATE TABLE medical_documents (
 
 CREATE TABLE accident_incidents (
     incident_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    qr_id INT NOT NULL,
+    user_id INT NULL,
+    qr_id INT NULL,
     incident_latitude DECIMAL(10, 8) NOT NULL,
     incident_longitude DECIMAL(11, 8) NOT NULL,
     injured_count INT NOT NULL DEFAULT 1,
@@ -136,6 +143,10 @@ CREATE TABLE accident_incidents (
     selected_hospital_id INT NULL,
     selected_ambulance_id INT NULL,
     public_message TEXT NULL,
+    reported_person_name VARCHAR(150) NULL,
+    reported_person_nic VARCHAR(30) NULL,
+    reported_person_phone VARCHAR(30) NULL,
+    reported_vehicle_number VARCHAR(80) NULL,
     reported_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_accident_incidents_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
@@ -283,4 +294,3 @@ CREATE TABLE audit_logs (
     INDEX idx_audit_logs_user_created (user_id, created_at),
     CONSTRAINT fk_audit_logs_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE SET NULL
 );
-

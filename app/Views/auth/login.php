@@ -16,6 +16,7 @@
     <div class="panel accent">
         <h2>Demo accounts from seed</h2>
         <p><strong>Patient:</strong> patient1@healthfirst.lk</p>
+        <p><strong>Hospital Desk:</strong> hdesk1@healthfirst.lk</p>
         <p><strong>Doctor:</strong> doctor1@healthfirst.lk</p>
         <p><strong>Paramedic:</strong> paramedic1@healthfirst.lk</p>
         <p><strong>Hospital Admin:</strong> hadmin1@healthfirst.lk</p>
@@ -23,4 +24,3 @@
         <p class="muted">Password for seeded users: <code>Password@123</code></p>
     </div>
 </section>
-

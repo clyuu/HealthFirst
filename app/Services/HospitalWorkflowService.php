@@ -21,6 +21,14 @@ final class HospitalWorkflowService
             throw new RuntimeException('Incident or ambulance not found.');
         }
 
+        if ((int) $incident['selected_hospital_id'] !== (int) $ambulance['hospital_id']) {
+            throw new RuntimeException('Selected ambulance does not belong to this hospital.');
+        }
+
+        if (($ambulance['status'] ?? '') !== 'available') {
+            throw new RuntimeException('Selected ambulance is no longer available.');
+        }
+
         $originLat = $ambulance['current_latitude'] ?: $incident['hospital_latitude'];
         $originLng = $ambulance['current_longitude'] ?: $incident['hospital_longitude'];
 
@@ -46,4 +54,3 @@ final class HospitalWorkflowService
         return $incidentModel->findDetailedById($incidentId) ?? [];
     }
 }
-

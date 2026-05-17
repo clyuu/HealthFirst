@@ -5,6 +5,8 @@
 !/storage/generated/qrcodes/.gitkeep
 /storage/generated/reports/*
 !/storage/generated/reports/.gitkeep
+/storage/generated/imports/*
+!/storage/generated/imports/.gitkeep
 /storage/uploads/documents/*
 !/storage/uploads/documents/.gitkeep
 /storage/uploads/scene/*
@@ -16,4 +18,3 @@
 /__pycache__/
 /ai_service/__pycache__/
 *.pyc
-
